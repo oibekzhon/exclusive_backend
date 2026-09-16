@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
+from django.utils import timezone
 
 
 class UserProfile(models.Model):
@@ -24,3 +25,15 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f'{self.user.username} ({self.role})'
+
+
+class PasswordResetRequest(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='password_reset_requests')
+    code_hash = models.CharField(max_length=128)
+    reset_token_hash = models.CharField(max_length=128, blank=True, db_index=True)
+    expires_at = models.DateTimeField()
+    verified_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_expired(self):
+        return timezone.now() >= self.expires_at
